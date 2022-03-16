@@ -1,6 +1,6 @@
 ---
 title: "Activity 10.2 - Model Iterating"
-author: "Name"
+author: "Robert Bilyk"
 output: github_document
 ---
 
@@ -15,6 +15,10 @@ In this activity, we will continue working with the data from Activity 6 (Pivoti
 For this activity, you will need the `{tidyverse}` and `{broom}` packages.
 
 
+```{r}
+library(tidyverse)
+library(broom)
+```
 
 
 ### The data
@@ -60,10 +64,14 @@ Complete the code chunk below by filling in the blanks so that you *create* a ne
 The [`rowwise`](https://dplyr.tidyverse.org/reference/rowwise.html) documentation will be helpful for seeing additional examples of using this function.  
 
 ```{r rowwise-mean}
-_____ <- _____ %>% 
+
+evals <- read_csv(here::here("data","evals-mod.csv"))
+
+evals <- evals %>% 
   rowwise() %>% 
-  ______(bty_avg = mean(c_across(___________:___________))) %>% 
+  mutate(bty_avg = mean(c_across(bty_f1lower:bty_m2upper))) %>% 
   ungroup()
+
 ```
 
 The `rowwise` function works a lot like `group_by`, except that it groups the data frame one row at a time so that any operation applied to the data frame is done once per each row.
@@ -77,11 +85,22 @@ Is this what you expected to see?
 Why, or why not?
 Also, include any numerical summary statistics (uses a `dplyr::summarise` pipeline, not the `BASE::summary` function) that will help in making your response more effective.
 
+```{r}
+evals %>%
+  summarise(min= min(score), q1=quantile(score, probs=.25), mean=mean(score), median=median(score), q3=quantile(score, probs=.75), max=max(score))
+
+evals %>%
+  summary(score)
+    
+evals %>%
+  ggplot(mapping=aes(x=score)) +
+  geom_boxplot()
+```
 
 
 
 **Response**:
-
+The data appears to be left skewed with a few really bad classes pulling the mean down. this doesn't suprise me too much as I'd expect most classes to be good with the exception of a few bad ones.
 
 A note on the `BASE::summary` function.
 This function along with the `{skimr}` package provide a lot of information with just a small bit of code.
@@ -95,11 +114,22 @@ Is this what you expected to see?
 Why, or why not?
 Also, include any numerical summary statistics (use a `dplyr::summarise` pipeline, not the `BASE::summary` function) that will help in making your response more effective.
 
+```{r}
+evals %>%
+  summarise(min= min(bty_avg), q1=quantile(bty_avg, probs=.25), mean=mean(bty_avg), median=median(bty_avg), q3=quantile(bty_avg, probs=.75), max=max(bty_avg))
+evals %>%
+  ggplot(mapping=aes(x=bty_avg)) +
+  geom_boxplot()
+
+evals %>%
+  ggplot(mapping=aes(x=bty_avg,y=score)) +
+  geom_jitter()
+```
 
 
 
 **Response**:
-
+This is fairly evenly distributed which doesn't surpise me all that much. There appears to be very little correlation between the score of the class and the attractiviness of the teacher.
 
 Create a new plot that is similar to the previous plot, but also indicates the `gender` of the professor.
 Describe this distribution and comment on what this tells you about how students rate courses/instructors.
@@ -107,11 +137,16 @@ Is this what you expected to see?
 Why, or why not?
 Also, include any numerical summary statistics (use a `dplyr::summarise` pipeline, not the `BASE::summary` function) that will help in making your response more effective.
 
+```{r}
+evals %>%
+  ggplot(mapping=aes(x=bty_avg,y=score, color=gender)) +
+  geom_jitter()
+```
 
 
 
 **Response**:
-
+There still doesn't appear to be any noticable trends here.
 
 ## Linear Models 
 
@@ -124,6 +159,11 @@ lm(y ~ x1 + x2, data = df)
 
 Fit a linear model and assign it to `mod_bty_gender` to predict the average professor evaluation `score` by average beauty rating (`avg_bty`) and the professor's `gender`.
 
+```{r}
+mod_bty_gender <- lm(score ~ bty_avg + gender, data=evals)
+tidy(mod_bty_gender)
+mod_bty_gender
+```
 
 
 
