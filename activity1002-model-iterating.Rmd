@@ -174,26 +174,33 @@ Be sure to comment on whether each of these values makes sense in this context.
 Also, use your `{dplyr}` skills on this `tidy` output to only include the model terms, parameter estimates, and standard errors. 
 
 
+3.74733459 + 0.07415493(bty_avg) + 0.17238871(gendermale)
 
-**Response**:
 
 
 Re-plot your last visualization, but now add the linear regression line(s) to this plot.
 Be sure to turn off the shading for the uncertainty of the line.
 
 
+```{r}
+evals %>%
+  ggplot(mapping=aes(x=bty_avg,y=score)) +
+  geom_jitter() +geom_smooth (method="lm", se=F)
+```
 
 
 Use the `broom::glance` function to view model diagnostics.
 
-
+```{r}
+broom::glance(mod_bty_gender)
+```
 
 
 Comment on the overall fit by looking at your new visualization and these model summary statistics.
 
 **Response**:
 
-
+There does appear to be a slight positive correlation between the 2 variables. However, glancing at the summary model statistics, they appear to account for only about 6% of variation in class score which is very low overall.
 
 
 Compare the `tidy` and `glanced` output to running `summary(mod_bty_gender)`.
@@ -226,6 +233,12 @@ Using the `evals` data,
 Make sure that you provide a meaningful object name.
 You should have a tibble with 3 rows and two columns.
 
+```{r}
+nested_data <- evals %>%
+  select(rank, score, bty_avg, gender) %>%
+  group_by(rank)%>%
+  nest()
+```
 
 
 What are the two column names?
@@ -233,7 +246,7 @@ Can you change the second column's name?
 If so, how?
 
 **Response**:
-
+rank and data 
 
 Now that we have the nested dataset, we can use `map` to fit a `lm` with the same variables to each nested `data`set.
 In general, we could do this like:
@@ -254,6 +267,10 @@ In addition to fitting a `model` column to your, include the following columns w
 
 You should have a tibble that has three rows and 6 columns (`rank`, `data`, `model`, `tidied`, `glanced`, `augmented`).
 
+```{r}
+nested_data %>% 
+  mutate(model = map(data, ~lm(score ~ bty_avg + gender, data=evals)), tidied= broom::tidy(model))
+```
 
 
 
